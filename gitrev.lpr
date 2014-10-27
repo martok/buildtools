@@ -4,7 +4,8 @@ uses
   Classes, SysUtils, getopts, uGitCalls, strutils, dateutils;
 
 const
-  OptionsLong: array[1..6] of TOption = (
+  OptionsLong: array[1..7] of TOption = (
+    (Name: 'help'; Has_Arg: No_Argument; Flag: nil; Value: 'h'),
     (Name: 'path'; Has_Arg: No_Argument; Flag: nil; Value: #0),
     (Name: 'format'; Has_Arg: Required_Argument; Flag: nil; Value: 'f'),
     (Name: 'echo'; Has_Arg: No_Argument; Flag: nil; Value: 'e'),
@@ -12,7 +13,7 @@ const
     (Name: 'insert'; Has_Arg: Required_Argument; Flag: nil; Value: 'i'),
     (Name: ''; Has_Arg: 0; Flag: nil; Value: #0)
   );
-  OptionShort = 'f:ed:i:';
+  OptionShort = 'h?f:ed:i:';
 
 
 var
@@ -27,6 +28,7 @@ end;
 function GetDescriptor: string;
 begin
   Result:= optDescriptFormatString;
+  Result:= StringReplace(Result, '$root$', GitRootPath, [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$branch$', GitBranch, [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$hash$', GitHash, [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$hash6$', Copy(GitHash, 1, 6), [rfReplaceAll, rfIgnoreCase]);
@@ -94,7 +96,18 @@ begin
     end;
     'h',
     '?': begin
-      WriteLn('gitrev [--path]');
+      WriteLn(ExtractFileName(ParamStr(0)),' [commands]');
+      WriteLn('Commands: (executed in order specified on commandline)');
+      WriteLn('  --path');
+      WriteLn('      Output current git repo root path');
+      WriteLn('  -f|--format "formatstring"');
+      WriteLn('      Specify format string to use for output');
+      WriteLn('  -e|--echo ');
+      WriteLn('      Evaluate current format and output to stdout');
+      WriteLn('  -d|--delimiter "begin:end" ');
+      WriteLn('      Specify colon-separated begin and end markers for file insert mode');
+      WriteLn('  -i|--insert "filename" ');
+      WriteLn('      Evaluate current format and replace part between delimiters in file');
       Halt(0);
     end;
   else
