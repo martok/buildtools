@@ -1,0 +1,7 @@
+unit git_rev;
+interface
+const
+  PROJECT_GIT_REVISION: string = {REV}''{/REV};
+
+implementation
+end.
