@@ -95,6 +95,11 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
      Required, .lpi file name
    MODE=
      Optional, build mode
+   BUILD=default
+     Optional, build depth. Allowed values:
+	 DEFAULT: only build what is needed
+	 CLEAN  : re-build project
+	 ALL    : re-build project and all dependencies
    OPTS=
      Optional, additional call arguments
    ```

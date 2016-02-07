@@ -11,12 +11,12 @@ tasks=gitrev,buildutil,packets
 [gitrev]
 tool=lazbuild
 project=gitrev.lpi
-opts=-B
+build=clean
 
 [buildutil]
 tool=lazbuild
 project=buildutil.lpi
-opts=-B
+build=clean
 
 [packets]
 tasks=pack-gitrev,pack-buildutil
