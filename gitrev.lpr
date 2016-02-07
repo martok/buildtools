@@ -1,7 +1,7 @@
 program gitrev;
 
 uses
-  Classes, SysUtils, getopts, uGitCalls, strutils, dateutils;
+  Classes, SysUtils, uGetOpt, getopts, uGitCalls, strutils, dateutils;
 
 const
   OptionsLong: array[1..7] of TOption = (
@@ -115,18 +115,7 @@ begin
   end;
 end;
 
-var
-  optIndex: integer;
-  opt: string;
 begin
-  optIndex:= 0;
-  while True do begin
-    opt:= GetLongOpts(OptionShort, @OptionsLong[1], optIndex);
-    if opt = EndOfOptions then
-      break;
-    if opt = #0 then
-      opt:= OptionsLong[optIndex].Name;
-    ProcessOption(opt, optArg);
-  end;
+  HandleAllOptions(OptionShort, @OptionsLong[1], @ProcessOption);
 end.
 

@@ -29,7 +29,6 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="--echo -i test.txt"/>
       </local>
     </RunParams>
     <Units Count="2">
@@ -38,9 +37,8 @@
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="uGitCalls.pas"/>
+        <Filename Value="src\uGitCalls.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="uGitCalls"/>
       </Unit1>
     </Units>
   </ProjectOptions>
@@ -52,6 +50,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="src"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
   </CompilerOptions>
