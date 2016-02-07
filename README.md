@@ -67,6 +67,10 @@ File Structure
 Buildfiles are structured in INI-style sections. Each section describes a single Task to be performed by a Tool, or a series of Task names to invoke.
 Tasks are executed in the order they are specified. If any Task fails (this includes nonzero exit codes of external programs), the entire process will be aborted.
 
+Variables
+---------
+Before a Task is executed, variables in the section content are replaced with their current values. Variables are written like so: `${NAME}`. Names may contain any alphanumeric character as well as the underscore. If a NAME is not a valid variable name, it will be kept as-is. If a variable name is valid, but no such variable is defined, it will be replaced by the empty string.
+
 Task Lists
 ----------
 Task lists are Tasks that only invoke other Tasks. Usually, the main Task is a task list. Task lists are defined by having a section contain no Tool specifier and a single `tasks` item:
@@ -106,10 +110,16 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
    ```
    Files list format is `FROM=TO`. `FROM` may be a file or file mask. If it is a file, `TO` may be a directory inside the archive or the new file name. To signal a directory name, use a path delimiter as last character, in this case, the file will keep the basename. If `FROM` is a file mask, `TO` will be treated as a directory name. If `TO` is empty, it is the same as `/`, meaning the archive root.
 
+* `env`: Set environment variables
+
+   Lines contain `Name=Value` pairs of variables. Use `Name=` to clear/undefine a variable.
+
+
 Global Configuration
 --------------------
 Some global parameters are required to specify for example program paths. These are searched in (in order):
 
-1. Environment variables
-2. the section `*BUILDUTIL*` of the current Buildfile
-3. the section `Globals` of an INI-filed called `buildutil.ini` located in the same place as the buildutil binary (more precisely, the buildutil binary name with `.ini` extension).
+1. Variables set via the `env` Tool
+2. Environment variables
+3. the section `*BUILDUTIL*` of the current Buildfile
+4. the section `Globals` of an INI-filed called `buildutil.ini` located in the same place as the buildutil binary (more precisely, the buildutil binary name with `.ini` extension).

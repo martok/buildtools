@@ -11,15 +11,21 @@ type
   TBuildFile = class(TMemIniFile)
   private
     fCurrentTask: string;
+    fGlobals: TStringList;
   protected
     function RunMetatask(const aOrder: TStringList): Integer;
     function RunTooltask(const aOrder: TStringList): Integer;
+    function ValidGlobalName(Name: string): boolean;
+    procedure ProcessVariables(const aOrder: TStringList);
   public
+    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
     function BuildTask(const aTask: string): Integer;
     function GetSection(const aSection: string): TStringList;
     property CurrentTask: string read fCurrentTask;
     function TryGetGlobal(Name: string; out Value: string): boolean;
     function GetGlobal(Name: string): string;
+    function SetGlobal(Name, Value: string): Boolean;
   public
     class function GetTempName: string;
   end;
@@ -47,9 +53,27 @@ const
 implementation
 
 uses
-  uToolCmd, uToolLazbuild, uToolZip;
+  uToolCmd, uToolLazbuild, uToolZip, uToolEnv, strutils;
 
 { TBuildFile }
+
+class function TBuildFile.GetTempName: string;
+begin
+  Result := ConcatPaths([GetTempDir(True), 'pack' + IntToStr(Random(1000))]);
+end;
+
+procedure TBuildFile.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  fGlobals:= TStringList.Create;
+  fGlobals.CaseSensitive:= false;
+end;
+
+procedure TBuildFile.BeforeDestruction;
+begin
+  FreeAndNil(fGlobals);
+  inherited BeforeDestruction;
+end;
 
 function TBuildFile.BuildTask(const aTask: string): Integer;
 var
@@ -60,6 +84,7 @@ begin
     try
       WriteLn('Begin Task : ', aTask);
       fCurrentTask:= aTask;
+      ProcessVariables(task);
       if (task.Values['TOOL'] = '') and (task.IndexOfName('TASKS')>=0) then begin
         Result:= RunMetatask(task);
       end else
@@ -89,16 +114,14 @@ begin
   Result.CaseSensitive:= false;
 end;
 
-class function TBuildFile.GetTempName: string;
-begin
-  Result := ConcatPaths([GetTempDir(True), 'pack' + IntToStr(Random(1000))]);
-end;
-
 function TBuildFile.TryGetGlobal(Name: string; out Value: string): boolean;
 var
   ini: TIniFile;
 begin
   Result:= false;
+  Value:= fGlobals.Values[Name];
+  if Value > '' then
+    Exit(true);
   Value := GetEnvironmentVariable(Name);
   if Value > '' then
     Exit(true);
@@ -120,6 +143,23 @@ begin
   if not TryGetGlobal(Name, Result) then begin
     WriteLn(ErrOutput, 'Error locating global config field ', UpperCase(Name), '.');
     halt(ERROR_GLOBAL_CONFIG);
+  end;
+end;
+
+function TBuildFile.SetGlobal(Name, Value: string): Boolean;
+var
+  i: integer;
+begin
+  Result:= true;
+  if Value = '' then begin
+    i:= fGlobals.IndexOfName(Name);
+    if i >= 0 then
+      fGlobals.Delete(i);
+  end else begin
+    if not ValidGlobalName(Name) then
+      Exit(False)
+    else
+      fGlobals.Values[Name]:= Value;
   end;
 end;
 
@@ -161,6 +201,7 @@ begin
     'CMD': toolc := TBuildToolCmd;
     'LAZBUILD': toolc := TBuildToolLazbuild;
     'ZIP': toolc := TBuildToolZip;
+    'ENV': toolc := TBuildToolEnv;
     else begin
       WriteLn(ErrOutput, 'Task ', CurrentTask, ': Tool ', aOrder.ValueFromIndex[0], ' is unknown.');
       Exit(ERROR_TASK_TOOL);
@@ -171,6 +212,54 @@ begin
     Result := Tool.Execute(aOrder);
   finally
     FreeAndNil(tool);
+  end;
+end;
+
+function TBuildFile.ValidGlobalName(Name: string): boolean;
+const
+  Forbidden: set of Char = [#0..#255] - ['a'..'z','A'..'Z','1'..'9','0'] - ['_'];
+begin
+  Result:= PosSet(Forbidden, Name) = 0;
+end;
+
+procedure TBuildFile.ProcessVariables(const aOrder: TStringList);
+  function ProcessLine(Line: string): string;
+  const
+    VAR_START = '${';
+    VAR_END   = '}';
+  var
+    ps, pe: integer;
+    vn, vv: string;
+  begin
+    Result:= '';
+    ps:= Pos(VAR_START, Line);
+    while ps > 0 do begin
+      Result += Copy(Line, 1, ps-1);
+      Delete(Line, 1, ps-1);
+      pe:= Pos(VAR_END, Line);
+      if pe = 0 then begin
+        // no end, cannot have any more variables, skip to collection at end
+        break;
+      end;
+      vn:= Copy(Line, Length(VAR_START) + 1, pe - Length(VAR_START)-1);
+      if TryGetGlobal(vn, vv) or ValidGlobalName(vn) then begin
+        Result += vv;
+        Delete(Line, 1, pe+Length(VAR_END)-1);
+      end else begin
+        Result += VAR_START;
+        Delete(Line, 1, Length(VAR_START));
+      end;
+
+      ps:= Pos(VAR_START, Line);
+    end;
+    Result:= Result + Line;
+  end;
+
+var
+  i: integer;
+begin
+  for i:= 0 to aOrder.Count - 1 do begin
+    aOrder[i]:= ProcessLine(aOrder[i]);
   end;
 end;
 

@@ -29,8 +29,6 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="package.cfg"/>
-        <WorkingDirectory Value="G:\Delphi\D7_Prog\pi\bin"/>
       </local>
     </RunParams>
     <RequiredPackages Count="1">
@@ -38,7 +36,7 @@
         <PackageName Value="LazUtils"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="buildutil.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -48,7 +46,7 @@
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="src\uToolZip.pas"/>
+        <Filename Value="src\uToolEnv.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
@@ -67,6 +65,10 @@
         <Filename Value="src\uGetOpt.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="src\uToolZip.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
