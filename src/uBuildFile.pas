@@ -53,7 +53,8 @@ const
 implementation
 
 uses
-  uToolCmd, uToolLazbuild, uToolZip, uToolEnv, strutils;
+  uToolCmd, uToolLazbuild, uToolZip, uToolEnv, uToolLazVersion,
+  strutils;
 
 { TBuildFile }
 
@@ -200,6 +201,7 @@ begin
   case UpperCase(aOrder.ValueFromIndex[0]) of
     'CMD': toolc := TBuildToolCmd;
     'LAZBUILD': toolc := TBuildToolLazbuild;
+    'LAZVERSION': toolc := TBuildToolLazVersion;
     'ZIP': toolc := TBuildToolZip;
     'ENV': toolc := TBuildToolEnv;
     else begin

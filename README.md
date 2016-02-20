@@ -97,11 +97,31 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
      Optional, build mode
    BUILD=default
      Optional, build depth. Allowed values:
-	 DEFAULT: only build what is needed
-	 CLEAN  : re-build project
-	 ALL    : re-build project and all dependencies
+     DEFAULT: only build what is needed
+     CLEAN  : re-build project
+     ALL    : re-build project and all dependencies
    OPTS=
      Optional, additional call arguments
+   ```
+
+* `lazversion`: Modify version information
+
+   Modifies version information in Lazarus project file (LPI). Version information must be active (UseVersionInfo=true) in the PROJECT given. Backups of original files will be created before saving.
+   ```
+   PROJECT=
+     Required, .lpi file name
+   INCREMENT=
+     Optional, increment version number by `Major.Minor.Revision.Build`. Trailing zeroes may be left out.
+   ADDFLAG=
+   REMOVEFLAG=
+     Optional, add/remove version flags. Specify comma-separated flags, those not explicitly modified remain unchanged. Allowed values:
+       pvaDebug
+       pvaPreRelease
+       pvaPatched
+       pvaPrivateBuild
+       pvaSpecialBuild
+   COPYTO=
+     Optional, copy version information to other LPI file(s) after other operations are done. Specify comma-separated file names here.
    ```
 
 * `zip`: create a zip file from file list (global: `PROGRAM_7ZIP` or `PROGRAM_ZIP`)
