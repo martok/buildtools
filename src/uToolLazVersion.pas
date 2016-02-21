@@ -125,6 +125,15 @@ begin
     end;
 
     WriteLn('Version number ', VersionQuadToStr(currentver));
+    f:= aOrder.Values['SETENV'];
+    if f > '' then begin
+      if Owner.SetGlobal(f, VersionQuadToStr(currentver)) then
+        WriteLn('Exported version number to ', f)
+      else begin
+        WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Cannot set env var ', f, '.');
+        Exit(ERROR_TASK_PROCESS);
+      end;
+    end;
 
     f:= aOrder.Values['ADDFLAG'];
     while f > '' do begin

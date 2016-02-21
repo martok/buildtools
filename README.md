@@ -112,6 +112,8 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
      Required, .lpi file name
    INCREMENT=
      Optional, increment version number by `Major.Minor.Revision.Build`. Trailing zeroes may be left out.
+   SETENV=
+     Optional, store new version number into a variable after other operations are done.
    ADDFLAG=
    REMOVEFLAG=
      Optional, add/remove version flags. Specify comma-separated flags, those not explicitly modified remain unchanged. Allowed values:
