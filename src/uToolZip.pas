@@ -14,6 +14,9 @@ type
 
 implementation
 
+const
+  FileCopyFlags = [cffPreserveTime];
+
 { TCopyDirTree for CopyDirTree function }
 type
 TCopyDirTree = class(TFileSearcher)
@@ -114,7 +117,7 @@ begin
           tn := ConcatPaths([files.ValueFromIndex[i], '']);
           tdn := ConcatPaths([td, tn]);
           WriteLn(sn, ' -> ', tn);
-          if not DeepCopy(sn, tdn) then begin
+          if not DeepCopy(sn, tdn, FileCopyFlags) then begin
             WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Copy failed in ', sn, '.');
             Exit(ERROR_TASK_PROCESS);
           end;
@@ -128,7 +131,7 @@ begin
             tn := files.ValueFromIndex[i];
           tdn := ConcatPaths([td, tn]);
           WriteLn(sn, ' -> ', tn);
-          if not CopyFile(sn, tdn, [cffCreateDestDirectory]) then begin
+          if not CopyFile(sn, tdn, [cffCreateDestDirectory] + FileCopyFlags) then begin
             WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Cannot copy file ', sn, '.');
             Exit(ERROR_TASK_PROCESS);
           end;
@@ -137,7 +140,7 @@ begin
       if FileExists(ofn) then
         DeleteFile(ofn);
       if Owner.TryGetGlobal('PROGRAM_7ZIP',zip) then
-        Result := ExecuteCommandInDir(format('"%s" a "%s" * -r -mx', [zip, ofn]), td, True)
+        Result := ExecuteCommandInDir(format('"%s" a "%s" * -r -mx=9', [zip, ofn]), td, True)
       else
         Result := ExecuteCommandInDir(format('"%s" -o -9 -r -S "%s" *', [Owner.GetGlobal('PROGRAM_ZIP'), ofn]), td, True);
     finally
