@@ -13,8 +13,8 @@ type
     fCurrentTask: string;
     fGlobals: TStringList;
   protected
-    function RunMetatask(const aOrder: TStringList): Integer;
-    function RunTooltask(const aOrder: TStringList): Integer;
+    function RunTasklist(const aOrder: TStringList): Integer;
+    function RunTask(const aOrder: TStringList): Integer;
     function ValidGlobalName(Name: string): boolean;
     procedure ProcessVariables(const aOrder: TStringList);
   public
@@ -87,10 +87,10 @@ begin
       fCurrentTask:= aTask;
       ProcessVariables(task);
       if (task.Values['TOOL'] = '') and (task.IndexOfName('TASKS')>=0) then begin
-        Result:= RunMetatask(task);
+        Result:= RunTasklist(task);
       end else
       if (task.IndexOfName('TOOL') >= 0) then begin
-        Result:= RunTooltask(task);
+        Result:= RunTask(task);
       end else begin
         WriteLn(ErrOutput, 'Invalid task format for ',aTask);
         Exit(ERROR_TASK_INVALID);
@@ -164,7 +164,7 @@ begin
   end;
 end;
 
-function TBuildFile.RunMetatask(const aOrder: TStringList): Integer;
+function TBuildFile.RunTasklist(const aOrder: TStringList): Integer;
 var
   tasks: TStringList;
   task: string;
@@ -188,7 +188,7 @@ begin
   end;
 end;
 
-function TBuildFile.RunTooltask(const aOrder: TStringList): Integer;
+function TBuildFile.RunTask(const aOrder: TStringList): Integer;
 var
   toolc: TBuildToolClass;
   tool: TBuildTool;

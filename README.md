@@ -56,7 +56,7 @@ Usage
 
 ```
 buildutil.exe [options] [TASK]
-Task: begin building at [TASK], otherwise starts at [*buildutil*]
+Task: begin building at [TASK], otherwise starts at [*MAIN*]
 Options:
   -f|--file "FILENAME"
       Read Buildfile from FILENAME, defaults to Buildfile
@@ -75,7 +75,7 @@ Task Lists
 ----------
 Task lists are Tasks that only invoke other Tasks. Usually, the main Task is a task list. Task lists are defined by having a section contain no Tool specifier and a single `tasks` item:
 ```
-[*buildutil*]
+[*MAIN*]
 tasks=build,makearchive
 ```
 

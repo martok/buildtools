@@ -7,7 +7,6 @@ uses {$IFDEF UNIX} {$IFDEF UseCThreads}
   SysUtils,
   Classes,
   IniFiles,
-  processutils,
   fileutil, LazFileUtils,
   uGetOpt, getopts, uBuildFile;
 
@@ -19,9 +18,12 @@ const
   );
   OptionShort = 'h?f:';
 
+const
+  TASK_DEFAULT = '*MAIN*';
+
 var
   Buildfile: string = 'Buildfile';
-  Buildtask: string = '*buildutil*';
+  Buildtask: string = TASK_DEFAULT;
 
 procedure ProcessOption(const opt: string; const OptArg: string);
 begin
@@ -29,7 +31,7 @@ begin
     'h',
     '?': begin
       WriteLn(ExtractFileName(ParamStr(0)),' [options] [TASK]');
-      WriteLn('Task: begin building at [TASK], otherwise starts at [*buildutil*] ');
+      WriteLn('Task: begin building at [TASK], otherwise starts at ',TASK_DEFAULT,' ');
       WriteLn('Options:');
       WriteLn('  -f|--file "FILENAME"');
       WriteLn('      Read Buildfile from FILENAME, defaults to Buildfile');
