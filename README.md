@@ -60,6 +60,8 @@ Task: begin building at [TASK], otherwise starts at [*MAIN*]
 Options:
   -f|--file "FILENAME"
       Read Buildfile from FILENAME, defaults to Buildfile
+  -s|--suppress "TASK[,TASK]"
+      Do not execute TASKs, assume succeeded
 ```
 
 File Structure

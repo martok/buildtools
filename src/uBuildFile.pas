@@ -12,6 +12,7 @@ type
   private
     fCurrentTask: string;
     fGlobals: TStringList;
+    fSuppressed: TStringList;
   protected
     function RunTasklist(const aOrder: TStringList): Integer;
     function RunTask(const aOrder: TStringList): Integer;
@@ -26,6 +27,7 @@ type
     function TryGetGlobal(Name: string; out Value: string): boolean;
     function GetGlobal(Name: string): string;
     function SetGlobal(Name, Value: string): Boolean;
+    procedure SetSuppressed(Tasks: string);
   public
     class function GetTempName: string;
   end;
@@ -68,10 +70,14 @@ begin
   inherited AfterConstruction;
   fGlobals:= TStringList.Create;
   fGlobals.CaseSensitive:= false;
+  fSuppressed:= TStringList.Create;
+  fSuppressed.Delimiter:= ',';
+  fSuppressed.CaseSensitive:= false;
 end;
 
 procedure TBuildFile.BeforeDestruction;
 begin
+  FreeAndNil(fSuppressed);
   FreeAndNil(fGlobals);
   inherited BeforeDestruction;
 end;
@@ -81,6 +87,10 @@ var
   task: TStringList;
 begin
   if SectionExists(aTask) then begin
+    if fSuppressed.IndexOf(aTask) >= 0 then begin
+      WriteLn('Skipping Task : ', aTask, ' (because on Suppressed list)');
+      Exit(0);
+    end;
     task:= GetSection(aTask);
     try
       WriteLn('Begin Task : ', aTask);
@@ -279,6 +289,11 @@ begin
   for i:= 0 to aOrder.Count - 1 do begin
     aOrder[i]:= ProcessLine(aOrder[i]);
   end;
+end;
+
+procedure TBuildFile.SetSuppressed(Tasks: string);
+begin
+  fSuppressed.DelimitedText:= Tasks;
 end;
 
 { TBuildTool }
