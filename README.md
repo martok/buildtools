@@ -78,6 +78,7 @@ Task lists are Tasks that only invoke other Tasks. Usually, the main Task is a t
 [*MAIN*]
 tasks=build,makearchive
 ```
+All items except `TASKS=` will be treated as if they were passed to the `env` Tool, that is, set/clear environment variables. The original environment will be restored after executing all referenced tasks.
 
 Tasks
 -----

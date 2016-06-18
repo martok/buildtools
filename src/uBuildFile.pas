@@ -168,6 +168,8 @@ function TBuildFile.RunTasklist(const aOrder: TStringList): Integer;
 var
   tasks: TStringList;
   task: string;
+  saveEnv: TStringList;
+  i: Integer;
 begin
   tasks:= TStringList.Create;
   try
@@ -178,10 +180,24 @@ begin
       Exit(0);
     end;
 
-    for task in tasks do begin
-      Result:= BuildTask(task);
-      if Result <> 0 then
-        Exit;
+    saveEnv:= TStringList.Create;
+    try
+      saveEnv.Assign(fGlobals);
+      for i:= 0 to aOrder.Count - 1 do begin
+        if not AnsiSameText(aOrder[i], 'TASKS') then
+          if not SetGlobal(aOrder.Names[i], aOrder.ValueFromIndex[i]) then begin
+            WriteLn(ErrOutput, 'Task ', CurrentTask, ': Cannot set env var ', aOrder.Names[i], '.');
+            Exit(ERROR_TASK_PROCESS);
+          end;
+      end;
+      for task in tasks do begin
+        Result:= BuildTask(task);
+        if Result <> 0 then
+          Exit;
+      end;
+    finally
+      fGlobals.Assign(saveEnv);
+      FreeAndNil(saveEnv);
     end;
   finally
     FreeAndNil(tasks);
