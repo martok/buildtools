@@ -27,6 +27,7 @@ type
     function GetGlobal(Name: string): string;
     function SetGlobal(Name, Value: string): Boolean;
     procedure ProcessVariables(const aOrder: TStringList);
+    function SubstituteVariables(Line: String): String;
     procedure SetSuppressed(Tasks: string);
   public
     class function GetTempName: string;
@@ -56,7 +57,7 @@ implementation
 
 uses
   uToolCmd, uToolLazbuild, uToolZip, uToolEnv, uToolLazVersion,
-  strutils;
+  strutils, processutils;
 
 { TBuildFile }
 
@@ -251,44 +252,160 @@ begin
 end;
 
 procedure TBuildFile.ProcessVariables(const aOrder: TStringList);
-  function ProcessLine(Line: string): string;
-  const
-    VAR_START = '${';
-    VAR_END   = '}';
-  var
-    ps, pe: integer;
-    vn, vv: string;
-  begin
-    Result:= '';
-    ps:= Pos(VAR_START, Line);
-    while ps > 0 do begin
-      Result += Copy(Line, 1, ps-1);
-      Delete(Line, 1, ps-1);
-      pe:= Pos(VAR_END, Line);
-      if pe = 0 then begin
-        // no end, cannot have any more variables, skip to collection at end
-        break;
-      end;
-      vn:= Copy(Line, Length(VAR_START) + 1, pe - Length(VAR_START)-1);
-      if TryGetGlobal(vn, vv) or ValidGlobalName(vn) then begin
-        Result += vv;
-        Delete(Line, 1, pe+Length(VAR_END)-1);
-      end else begin
-        Result += VAR_START;
-        Delete(Line, 1, Length(VAR_START));
-      end;
-
-      ps:= Pos(VAR_START, Line);
-    end;
-    Result:= Result + Line;
-  end;
-
 var
   i: integer;
 begin
   for i:= 0 to aOrder.Count - 1 do begin
-    aOrder[i]:= ProcessLine(aOrder[i]);
+    aOrder[i]:= SubstituteVariables(aOrder[i]);
   end;
+end;
+
+function TBuildFile.SubstituteVariables(Line: String): String;
+const
+  VAR_START = '${';
+  VAR_END   = '}';
+  VAR_FUNC_DELIM = ' ';
+  VAR_PARAM_DELIM = ',';
+
+  function InterpretFunction(func: string; args: TStringArray; out Value: string): boolean;
+  begin
+    Result:= true;
+    case UpperCase(func) of
+      // Text Functions
+      'UPPER': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= args[0].ToUpper;
+      end;
+      'LOWER': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= args[0].ToLower;
+      end;
+      'SUBST': begin
+        if Length(Args) <> 3 then
+          Exit(false);
+        Value:= StringReplace(args[2], args[0], args[1], [rfReplaceAll]);
+      end;
+      // File Name Functions
+      'DIR': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= ExtractFilePath(args[0]);
+        if Value = '' then
+          Value:= '.'+DirectorySeparator;
+      end;
+      'NOTDIR': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= ExtractFileName(args[0]);
+      end;
+      'SUFFIX': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= ExtractFileExt(args[0]);
+      end;
+      'BASENAME': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= ChangeFileExt(args[0], '');
+      end;
+      'REALPATH': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        Value:= ExpandFileName(args[0]);
+      end;
+      // Shell Function
+      'SHELL': begin
+        if Length(Args) < 1 then
+          Exit(false);
+        Value:= '';
+        SetGlobal('_SHELLSTATUS', IntToStr(ExecuteCommand(AnsiString.Join(VAR_PARAM_DELIM, args), Value, false)));
+        Value:= Value.Replace(#13,'').Replace(#10,' ').TrimRight;
+      end;
+    else
+      Exit(False);
+    end;
+  end;
+
+  function InterpretVariable(Name: String; out Value: String): boolean;
+  var
+    fc,args: TStringArray;
+    i: Integer;
+  begin
+    Result:= false;
+    // Variables may be (in order:)
+    // 1. simple variables ${FOO}, return '' if undefined
+    // 2. function calls ${FUNC ARGV}, return unparsed if FUNC is undefined
+    if ValidGlobalName(Name) then begin
+      Result:= true;
+      if not TryGetGlobal(Name, Value) then
+        Value:= '';
+    end else begin
+      fc:= Name.Split(VAR_FUNC_DELIM);
+      if Length(FC) = 0 then
+        Exit;
+      Result:= true;
+      if Length(fc) > 1 then begin
+        args:= AnsiString.Join(VAR_FUNC_DELIM, FC, 1, Maxint).Split(VAR_PARAM_DELIM);
+        for i:= 0 to high(args) do
+          args[i]:= SubstituteVariables(Trim(args[i]));
+      end
+      else
+        SetLength(args, 0);
+      Result:= InterpretFunction(fc[0], args, Value);
+    end;
+  end;
+var
+  ps, pe, tok: integer;
+  vn, vv: string;
+  nesting: integer;
+begin
+  Result:= '';
+  nesting:= 0;
+  ps:= Pos(VAR_START, Line);
+  while ps > 0 do begin
+    Result += Copy(Line, 1, ps-1);
+    Delete(Line, 1, ps-1);
+    inc(nesting);
+
+    pe:= Length(VAR_START) + 1;
+    repeat
+      pe:= Line.IndexOfAny([VAR_START, VAR_END], pe-1, MaxInt, tok) + 1;
+      if pe = 0 then begin
+        // no end, cannot have any more variables, skip to collection at end
+        break;
+      end;
+      // identify token
+      case tok of
+        0: begin
+          inc(nesting);
+          inc(pe, length(VAR_START));
+        end;
+        1: begin
+          dec(nesting);
+          inc(pe, length(VAR_END));
+        end;
+      end;
+    until (nesting = 0) or (pe > length(Line));
+
+    if (pe = 0) then
+      break;
+
+    if nesting = 0 then begin
+      vn:= Copy(Line, Length(VAR_START) + 1, pe - Length(VAR_END) - Length(VAR_START) - 1);
+      if InterpretVariable(vn, vv) then begin
+        Result += vv;
+        Delete(Line, 1, pe-1);
+      end else begin
+        Result += VAR_START;
+        Delete(Line, 1, Length(VAR_START));
+      end;
+    end;
+
+    ps:= Pos(VAR_START, Line);
+  end;
+  Result:= Result + Line;
 end;
 
 procedure TBuildFile.SetSuppressed(Tasks: string);

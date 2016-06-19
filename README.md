@@ -71,7 +71,47 @@ Tasks are executed in the order they are specified. If any Task fails (this incl
 
 Variables
 ---------
-Before a Task is executed, variables in the section content are replaced with their current values. Variables are written like so: `${NAME}`. Names may contain any alphanumeric character as well as the underscore. If a NAME is not a valid variable name, it will be kept as-is. If a variable name is valid, but no such variable is defined, it will be replaced by the empty string.
+Before a Task is executed, variables in the section content (including CMD scripts) are replaced with their current values. Variables are written like so: `${VARIABLE}`. VARIABLE may be:
+
+1. A valid variable name (any alphanumeric character as well as the underscore):
+   1. if the variable is defined, return the value of the variable
+   2. otherwise, return the empty string
+2. Any other content will be examined as a function call `${FUNC ARGV}`
+   1. If the function and arguments are valid, return result of the function
+   2. otherwise, return unparsed VARIABLE
+
+Functions syntax is heavily inspired by [GNU Make](https://www.gnu.org/software/make/manual/html_node/Functions.html), although only a subset is implemented here. Functions are always a one-word function name followed by a space character followed by one or more comma-separated arguments. Arguments may contain variable and function references again, but only if not more than the top contain comma-delimited arguments. Example:
+```
+Valid:
+  ${subst dir,dir2,${realpath ${TOOLPATH}}}
+Not Valid:
+  ${subst dir,dir2,${subst my,other,${TOOLPATH}}}
+```
+
+Functions are:
+* Text Functions
+
+  | Function | Description |
+  | --- | --- |
+  | `${upper TEXT}` | Returns TEXT in uppercase |
+  | `${lower TEXT}` | Returns TEXT in lowercase |
+  | `${subst FROM,TO,TEXT}` | Replace all occurences of FROM in TEXT with TO |
+
+* File Name Functions
+
+  | Function | Description |
+  | --- | --- |
+  | `${dir FNAME}` | Returns the directory part of FNAME, including backslash, or `./` if FNAME contains no directory |
+  | `${notdir FNAME}` | Returns only the filename part of FNAME, without any directory |
+  | `${suffix FNAME}` | Returns only the extension part of FNAME, or the empty string if FNAME has no extension |
+  | `${basename FNAME}` | Returns FNAME without extension, but including path names |
+  | `${realpath FNAME}` | Returns FNAME expanded relative to the current directory |
+
+* Shell Function
+
+  | Function | Description |
+  | --- | --- |
+  | `${shell COMMAND}` | Executes COMMAND in a subshell and returns the output, lines concatenated by spaces. COMMAND may include arbitrary spaces and commas. The result code is stored in the _SHELLSTATUS variable. |
 
 Task Lists
 ----------
