@@ -88,6 +88,18 @@ end;
 { TBuildToolZip }
 
 function TBuildToolZip.Execute(const aOrder: TStringList): Integer;
+  function JoinExcludes(delim: string): string;
+  var
+    i: integer;
+  begin
+    Result:= '';
+    for i:= 0 to aOrder.Count-1 do
+      if AnsiSameText('EXCLUDE', aOrder.Names[i]) then begin
+        if Result > '' then Result += ' ';
+        Result+= delim+aOrder.ValueFromIndex[i];
+      end;
+  end;
+
 var
   ofn, fls, td, tn, sn, tdn, zip: string;
   files: TStringList;
@@ -107,6 +119,7 @@ begin
   end;
   files:= Owner.GetSection(fls);
   try
+    Owner.ProcessVariables(files);
     td := Owner.GetTempName;
     ForceDirectories(td);
     try
@@ -140,9 +153,9 @@ begin
       if FileExists(ofn) then
         DeleteFile(ofn);
       if Owner.TryGetGlobal('PROGRAM_7ZIP',zip) then
-        Result := ExecuteCommandInDir(format('"%s" a "%s" * -r -mx=9', [zip, ofn]), td, True)
+        Result := ExecuteCommandInDir(format('"%s" a "%s" %s * -r -mx=9', [zip, ofn, JoinExcludes('-xr!')]), td, True)
       else
-        Result := ExecuteCommandInDir(format('"%s" -o -9 -r -S "%s" *', [Owner.GetGlobal('PROGRAM_ZIP'), ofn]), td, True);
+        Result := ExecuteCommandInDir(format('"%s" -o -9 -r -S "%s" %s *', [Owner.GetGlobal('PROGRAM_ZIP'), ofn, JoinExcludes('-x ')]), td, True);
     finally
       DeleteDirectory(td, False);
     end;

@@ -17,7 +17,6 @@ type
     function RunTasklist(const aOrder: TStringList): Integer;
     function RunTask(const aOrder: TStringList): Integer;
     function ValidGlobalName(Name: string): boolean;
-    procedure ProcessVariables(const aOrder: TStringList);
   public
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -27,6 +26,7 @@ type
     function TryGetGlobal(Name: string; out Value: string): boolean;
     function GetGlobal(Name: string): string;
     function SetGlobal(Name, Value: string): Boolean;
+    procedure ProcessVariables(const aOrder: TStringList);
     procedure SetSuppressed(Tasks: string);
   public
     class function GetTempName: string;

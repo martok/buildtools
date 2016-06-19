@@ -136,7 +136,9 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
    FILENAME=
      Required, output file name
    FILES=
-     required, section containing file definitions
+     Required, section containing file definitions
+   EXCLUDE=
+     Optional, file mask to exclude
    ```
    Files list format is `FROM=TO`. `FROM` may be a file or file mask. If it is a file, `TO` may be a directory inside the archive or the new file name. To signal a directory name, use a path delimiter as last character, in this case, the file will keep the basename. If `FROM` is a file mask, `TO` will be treated as a directory name. If `TO` is empty, it is the same as `/`, meaning the archive root.
 
