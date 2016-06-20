@@ -177,6 +177,8 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
      Required, output file name
    FILES=
      Required, section containing file definitions
+   LEVEL=5
+     Optional, compression level (0..9)
    EXCLUDE=
      Optional, file mask to exclude
    ```

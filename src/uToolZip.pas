@@ -104,6 +104,7 @@ var
   ofn, fls, td, tn, sn, tdn, zip: string;
   files: TStringList;
   i: integer;
+  level: integer;
 begin
   Result := 0;
   ofn := ExpandFileName(aOrder.Values['FILENAME']);
@@ -117,6 +118,13 @@ begin
     WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Files specifier missing.');
     Exit(ERROR_TASK_PARAMETER);
   end;
+
+  level:= StrToIntDef(aOrder.Values['LEVEL'], 5);
+  if not (level in [0..9]) then begin
+    WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Invalid compression level ',level,': not in 0..9.');
+    Exit(ERROR_TASK_PARAMETER);
+  end;
+
   files:= Owner.GetSection(fls);
   try
     Owner.ProcessVariables(files);
@@ -153,9 +161,9 @@ begin
       if FileExists(ofn) then
         DeleteFile(ofn);
       if Owner.TryGetGlobal('PROGRAM_7ZIP',zip) then
-        Result := ExecuteCommandInDir(format('"%s" a "%s" %s * -r -mx=9', [zip, ofn, JoinExcludes('-xr!')]), td, True)
+        Result := ExecuteCommandInDir(format('"%s" a "%s" %s * -r -mx=%d', [zip, ofn, JoinExcludes('-xr!'), level]), td, True)
       else
-        Result := ExecuteCommandInDir(format('"%s" -o -9 -r -S "%s" %s *', [Owner.GetGlobal('PROGRAM_ZIP'), ofn, JoinExcludes('-x ')]), td, True);
+        Result := ExecuteCommandInDir(format('"%s" -o -%d -r -S "%s" %s *', [Owner.GetGlobal('PROGRAM_ZIP'), level, ofn, JoinExcludes('-x ')]), td, True);
     finally
       DeleteDirectory(td, False);
     end;
