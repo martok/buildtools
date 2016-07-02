@@ -17,7 +17,7 @@ const
     (Name: 'suppress'; Has_Arg: Required_Argument; Flag: nil; Value: 's'),
     (Name: ''; Has_Arg: 0; Flag: nil; Value: #0)
   );
-  OptionShort = 'h?f:';
+  OptionShort = 'h?f:s:';
 
 const
   TASK_DEFAULT = '*MAIN*';
@@ -40,6 +40,9 @@ begin
       WriteLn('  -s|--suppress "TASK[,TASK]"');
       WriteLn('      Do not execute TASKs, assume succeeded');
       Halt(0);
+    end;
+    'f': begin
+      Buildfile:= OptArg;
     end;
     's': begin
       if SuppressedTasks > '' then
