@@ -243,8 +243,8 @@ procedure TProcessEx.Execute;
     Result := False;
     while Output.NumBytesAvailable > 0 do
     begin
-      ReadBytes := {%H-}Output.Read(Buffer, BufSize);
-      FOutStream.Write(Buffer, ReadBytes);
+      ReadBytes := {%H-}Output.Read(Buffer[0], BufSize);
+      FOutStream.Write(Buffer[0], ReadBytes);
       if Assigned(FOnOutput) then
         FOnOutput(Self,copy(pchar(@buffer[0]),1,ReadBytes));
       if Assigned(FOnOutputM) then
@@ -533,6 +533,7 @@ begin
       s:=GetFirstWord;
       end;
     PE.ShowWindow := swoHIDE;
+    PE.Options:= PE.Options + [poPassInput];
     if Verbose then
       PE.OnOutput:=@DumpConsole;
     {$IFDEF DEBUGCONSOLE}

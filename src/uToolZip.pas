@@ -133,6 +133,7 @@ begin
     try
       for i := 0 to files.Count - 1 do begin
         sn := files.Names[i];
+        sn := ExpandFileName(sn);
         if Pos('*', ExtractFileName(sn)) > 0 then begin
           // copy with mask, target is always a directory
           tn := ConcatPaths([files.ValueFromIndex[i], '']);
