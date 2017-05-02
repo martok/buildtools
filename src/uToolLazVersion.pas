@@ -45,6 +45,11 @@ begin
   Result[4]:= a[4] + b[4];
 end;
 
+function VersionQuadToStrNoBuild(const Quad: TVersionQuad): String;
+begin
+  Result:=Format('%d.%d.%d',[Quad[1],Quad[2],Quad[3]]);
+end;
+
 function BackupFile(const fn: TFilename): boolean;
 begin
   Result:= CopyFile(fn, fn + '.bak', [cffOverwriteFile, cffPreserveTime], true);
@@ -127,7 +132,7 @@ begin
     WriteLn('Version number ', VersionQuadToStr(currentver));
     f:= aOrder.Values['SETENV'];
     if f > '' then begin
-      if Owner.SetGlobal(f, VersionQuadToStr(currentver)) then
+      if Owner.SetGlobal(f, VersionQuadToStrNoBuild(currentver)) then
         WriteLn('Exported version number to ', f)
       else begin
         WriteLn(ErrOutput, 'Task ', Owner.CurrentTask, ': Cannot set env var ', f, '.');
