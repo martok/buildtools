@@ -56,7 +56,7 @@ const
 implementation
 
 uses
-  uToolCmd, uToolLazbuild, uToolZip, uToolEnv, uToolLazVersion,
+  uToolCmd, uToolLazbuild, uToolZip, uToolEnv, uToolLazVersion, uToolPsh,
   strutils, processutils;
 
 { TBuildFile }
@@ -231,6 +231,7 @@ begin
     'LAZVERSION': toolc := TBuildToolLazVersion;
     'ZIP': toolc := TBuildToolZip;
     'ENV': toolc := TBuildToolEnv;
+    'POWERSHELL': toolc := TBuildToolPowershell;
     else begin
       WriteLn(ErrOutput, 'Task ', CurrentTask, ': Tool ', aOrder.ValueFromIndex[0], ' is unknown.');
       Exit(ERROR_TASK_TOOL);

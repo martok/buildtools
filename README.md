@@ -128,7 +128,11 @@ If a Task contains a Tool specifier (which must be given as the first item), thi
 
 * `cmd`: Run a shell script
 
-   All lines except the first are executed as a shell script
+   All remaining lines in the task are executed as a shell script
+
+* `powershell`: Run a Windows PowerShell script
+
+   All remaining lines in the task are executed as a PowerShell script (as if dot-sourced) with ExecutionPolicy RemoteSigned (so you may call further scripts)
 
 * `lazbuild`: invoke LazBuild (global: `PROGRAM_LAZBUILD`)
 
