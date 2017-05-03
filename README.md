@@ -97,6 +97,12 @@ Functions are:
   | `${lower TEXT}` | Returns TEXT in lowercase |
   | `${subst FROM,TO,TEXT}` | Replace all occurences of FROM in TEXT with TO |
 
+* Variable Functions
+
+  | Function | Description |
+  | --- | --- |
+  | `${defined NAME}` | return 1 if NAME is defined and nonempty, 0 otherwise |
+
 * File Name Functions
 
   | Function | Description |

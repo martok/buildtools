@@ -288,6 +288,15 @@ const
           Exit(false);
         Value:= StringReplace(args[2], args[0], args[1], [rfReplaceAll]);
       end;
+      // Variable Functions
+      'DEFINED': begin
+        if Length(Args) <> 1 then
+          Exit(false);
+        if TryGetGlobal(args[0], Value) then
+          Value:= '1'
+        else
+          Value:= '0';
+      end;
       // File Name Functions
       'DIR': begin
         if Length(Args) <> 1 then
