@@ -14,6 +14,15 @@ type
 
 implementation
 
+uses
+  dynlibs;
+
+type
+  TpfnCreateHardlinkW = function (lpFileName, lpExistingFileName: Pwidechar;
+  lpSecurityAttributes: Pointer): LongBool; stdcall;
+var
+  pfnCreateHardLinkW: TpfnCreateHardlinkW = nil;
+
 const
   FileCopyFlags = [cffPreserveTime];
 
@@ -25,6 +34,7 @@ private
   FTargetDir: string;
   FFlags: TCopyFileFlags;
   FCopyFailedCount: integer;
+  FCopyAsHardlinks: boolean;
 protected
   procedure DoFileFound; override;
   procedure DoDirectoryFound; override;
@@ -38,6 +48,12 @@ begin
   NewLoc := StringReplace(FileName, FSourceDir, FTargetDir, []);
   NewF := StringReplace(FileName, FSourceDir, '', []);
   WriteLn('  ',newf);
+  if FCopyAsHardlinks then begin
+    if pfnCreateHardLinkW(PWideChar(UnicodeString(NewLoc)), PWideChar(UnicodeString(FileName)), nil) then
+      exit
+    else
+      FCopyAsHardlinks:= false;
+  end;
   if not CopyFile(FileName, NewLoc, FFlags) then
     Inc(FCopyFailedCount);
 end;
@@ -71,6 +87,7 @@ begin
     Searcher.FCopyFailedCount := 0;
     Searcher.FSourceDir := LazFileUtils.TrimFilename(SetDirSeparators(SourceDir));
     Searcher.FTargetDir := LazFileUtils.TrimFilename(SetDirSeparators(TargetDir));
+    Searcher.FCopyAsHardlinks:= Assigned(pfnCreateHardLinkW);
 
     // Don't even try to copy to a subdirectory of SourceDir.
     B := TryCreateRelativePath(LazFileUtils.ExpandFilenameUtf8(Searcher.FSourceDir),
@@ -173,5 +190,9 @@ begin
   end;
 end;
 
+initialization
+{$IFDEF MSWINDOWS}
+  Pointer(pfnCreateHardLinkW):= GetProcAddress(SafeLoadLibrary(KernelDLL), 'CreateHardLinkW');
+{$ENDIF}
 end.
 
