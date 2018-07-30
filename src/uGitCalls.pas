@@ -5,12 +5,13 @@ unit uGitCalls;
 interface
 
 uses
-  Classes, SysUtils, process;
+  Classes, SysUtils, process, StrUtils;
 
 function GitRootPath: string;
 function GitBranch: string;
 function GitHash: string;
 function GitIsModified: boolean;
+function GitSvnLatest: string;
 
 implementation
 
@@ -19,6 +20,7 @@ var
   fGitBranch: string;
   fGitHash: string;
   fGitModified: integer = -1;
+  fGitSvnLatest: string;
 
 function RunGit(SubCmd: array of String; out output: string): boolean;
 begin
@@ -73,5 +75,43 @@ begin
   end;
   Result:= fGitModified > 0;
 end;
+
+
+function GitSvnLatest: string;
+const
+  STARTMARK = 'git-svn-id: http';
+
+  function ExtractSvnRev(A: String): string;
+  var
+    i: integer;
+    spl: TStringArray;
+  begin
+    Result:= '';
+    i:= LastDelimiter(#13#10, A);
+    if i = 0 then Exit;
+
+    Delete(A, 1, i);
+    A:= Trim(A);
+    i:= Pos(STARTMARK, A);
+    if i <> 1 then Exit;
+
+    spl:= A.Split([' '], TStringSplitOptions.None);
+    if Length(spl) <> 3 then Exit;
+    spl:= spl[1].Split('@', TStringSplitOptions.None);
+    if Length(spl) <> 2 then Exit;
+    Result:= spl[1];
+  end;
+
+var
+  tmp: string;
+begin
+  if fGitSvnLatest = '' then begin
+    if RunGit(['log','--grep='+STARTMARK,'-F','--topo-order','-n1'], tmp) then begin
+      fGitSvnLatest:= ExtractSvnRev(tmp);
+    end;
+  end;
+  Result:= fGitSvnLatest;
+end;
+
 end.
 

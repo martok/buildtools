@@ -29,6 +29,7 @@ Formatting Keywords
 * `$hash$`: full hash of current commit
 * `$hash6$`: short hash of current commit
 * `$mod$`: repository modified state, either empty or `(modified)`
+* `$svnrev$`: for `git-svn`: SVN revision of the most recent commit with a `git-svn-id`
 * `$time$`: ISO-8601 timestamp (local time)
 * `$timeutc$`: ISO-8601 timestamp (UTC)
 

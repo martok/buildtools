@@ -33,6 +33,7 @@ begin
   Result:= StringReplace(Result, '$hash$', GitHash, [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$hash6$', Copy(GitHash, 1, 6), [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$mod$', IfThen(GitIsModified, '(modified)',''), [rfReplaceAll, rfIgnoreCase]);
+  Result:= StringReplace(Result, '$svnrev$', GitSvnLatest, [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$time$', Timestamp(Now), [rfReplaceAll, rfIgnoreCase]);
   Result:= StringReplace(Result, '$timeutc$', Timestamp(LocalTimeToUniversal(Now))+'Z', [rfReplaceAll, rfIgnoreCase]);
 end;
