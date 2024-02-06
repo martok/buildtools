@@ -178,7 +178,7 @@ end;
 function TBuildFile.RunTasklist(const aOrder: TStringList): Integer;
 var
   tasks: TStringList;
-  task: string;
+  task, v, val: string;
   saveEnv: TStringList;
   i: Integer;
 begin
@@ -193,13 +193,22 @@ begin
 
     saveEnv:= TStringList.Create;
     try
-      saveEnv.Assign(fGlobals);
       for i:= 0 to aOrder.Count - 1 do begin
-        if not AnsiSameText(aOrder[i], 'TASKS') then
-          if not SetGlobal(aOrder.Names[i], aOrder.ValueFromIndex[i]) then begin
-            WriteLn(ErrOutput, 'Task ', CurrentTask, ': Cannot set env var ', aOrder.Names[i], '.');
-            Exit(ERROR_TASK_PROCESS);
-          end;
+        v:= aOrder.Names[i];
+        if AnsiSameText(v, 'TASKS') then
+          continue;
+        // save the var on first modificatation
+        if saveEnv.IndexOfName(v) < 0 then begin
+          if TryGetGlobal(v, val) then
+            saveEnv.Values[v]:= val
+          else
+            saveEnv.Values[v]:= '';
+        end;
+        // apply the requested change
+        if not SetGlobal(v, aOrder.ValueFromIndex[i]) then begin
+          WriteLn(ErrOutput, 'Task ', CurrentTask, ': Cannot set env var ', v, '.');
+          Exit(ERROR_TASK_PROCESS);
+        end;
       end;
       for task in tasks do begin
         Result:= BuildTask(task);
@@ -207,7 +216,10 @@ begin
           Exit;
       end;
     finally
-      fGlobals.Assign(saveEnv);
+      // reset or remove variables changed here
+      for i:= 0 to saveEnv.Count - 1 do begin
+        SetGlobal(saveEnv.Names[i], saveEnv.ValueFromIndex[i]);
+      end;
       FreeAndNil(saveEnv);
     end;
   finally
