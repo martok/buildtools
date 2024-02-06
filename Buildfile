@@ -1,4 +1,4 @@
-[*buildutil*]
+[*main*]
 tasks=win32,all
 
 [win32]

@@ -73,7 +73,7 @@ begin
     Halt(ERROR_BUILD_FILE);
   end;
 
-  bf:= TBuildFile.Create(Buildfile);
+  bf:= TBuildFile.Create(Buildfile, [ifoStripComments]);
   try
     bf.SetSuppressed(SuppressedTasks);
     ExitCode:= bf.BuildTask(Buildtask);
